@@ -4,8 +4,6 @@ import com.jd.generater.domain.UrlFileConfig;
 import com.jd.generater.manager.GeneraterManager;
 import com.jd.generater.util.FileUtil;
 import com.jd.generater.util.HttpUtil;
-import com.jd.ump.profiler.CallerInfo;
-import com.jd.ump.profiler.proxy.Profiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +39,6 @@ public class GeneraterWorker implements Runnable {
 
     @Override
     public void run() {
-        CallerInfo info = Profiler.registerInfo("HTML.GeneraterWorker", true, true);
         try {
             String newContent = HttpUtil.getStringFromUrl(config.getUrl(), encoding, ip);
             if (!HttpUtil.ERROR.equals(newContent) && newContent != null) {
@@ -54,10 +51,7 @@ public class GeneraterWorker implements Runnable {
                 }
             }
         } catch (IOException e) {
-            Profiler.functionError(info);
             logger.error("writeToFile error,filePath is " + config.getPath() + ";encoding is " + encoding, e);
-        } finally {
-            Profiler.registerInfoEnd(info);
         }
     }
 
