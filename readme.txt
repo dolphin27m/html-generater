@@ -1,4 +1,5 @@
 网站页面静态化工具包
+UMP监控KEY：HTML.GeneraterWorker 可以在系统中配置方法性能检测和方法心跳检测
 使用方法如下
 1.添加jar包坐标依赖
         <dependency>

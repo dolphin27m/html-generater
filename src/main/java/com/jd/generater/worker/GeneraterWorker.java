@@ -4,6 +4,8 @@ import com.jd.generater.domain.UrlFileConfig;
 import com.jd.generater.manager.GeneraterManager;
 import com.jd.generater.util.FileUtil;
 import com.jd.generater.util.HttpUtil;
+import com.jd.ump.profiler.CallerInfo;
+import com.jd.ump.profiler.proxy.Profiler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,24 +36,28 @@ public class GeneraterWorker implements Runnable {
     public GeneraterWorker(UrlFileConfig config, String ip, String encoding) {
         this.config = config;
         this.ip = ip;
-        this.encoding = encoding;
+        this.encoding = encoding == null ? defaultEncoding : encoding;
     }
 
     @Override
     public void run() {
-        String newContent = HttpUtil.getStringFromUrl(config.getUrl(), encoding, ip);
-        if (!HttpUtil.ERROR.equals(newContent) && newContent != null) {
-            if (config.getKey() != null && newContent.contains(config.getKey())) {
-                if (!sameCache(config.getPath(), newContent)) {
-                    try {
+        CallerInfo info = Profiler.registerInfo("HTML.GeneraterWorker", true, true);
+        try {
+            String newContent = HttpUtil.getStringFromUrl(config.getUrl(), encoding, ip);
+            if (!HttpUtil.ERROR.equals(newContent) && newContent != null) {
+                if (config.getKey() != null && newContent.contains(config.getKey())) {
+                    if (!sameCache(config.getPath(), newContent)) {
                         FileUtil.writeToFile(config.getPath(), newContent, encoding);
                         GeneraterManager.setCache(config.getPath(), newContent);
                         logger.info(new Date().toGMTString() + " create new file success,filePath is " + config.getPath());
-                    } catch (IOException e) {
-                        logger.error("writeToFile error,filePath is " + config.getPath() + ";encoding is " + encoding, e);
                     }
                 }
             }
+        } catch (IOException e) {
+            Profiler.functionError(info);
+            logger.error("writeToFile error,filePath is " + config.getPath() + ";encoding is " + encoding, e);
+        } finally {
+            Profiler.registerInfoEnd(info);
         }
     }
 
