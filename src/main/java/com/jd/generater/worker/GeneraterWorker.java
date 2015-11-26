@@ -1,5 +1,6 @@
 package com.jd.generater.worker;
 
+import com.jd.generater.domain.UrlFileConfig;
 import com.jd.generater.manager.GeneraterManager;
 import com.jd.generater.util.FileUtil;
 import com.jd.generater.util.HttpUtil;
@@ -15,14 +16,7 @@ import java.util.Date;
 public class GeneraterWorker implements Runnable {
     private final static Logger logger = LoggerFactory.getLogger(GeneraterWorker.class);
 
-    /**
-     * 访问url
-     */
-    private String url;
-    /**
-     * 文件路径
-     */
-    private String filePath;
+    private UrlFileConfig config;
     /**
      * 指定访问ip
      */
@@ -36,28 +30,26 @@ public class GeneraterWorker implements Runnable {
      */
     private final static String defaultEncoding = "UTF-8";
 
-    public GeneraterWorker(String url, String filePath, String ip) {
-        this(url, filePath, ip, defaultEncoding);
-    }
 
-    public GeneraterWorker(String url, String filePath, String ip, String encoding) {
-        this.url = url;
-        this.filePath = filePath;
+    public GeneraterWorker(UrlFileConfig config, String ip, String encoding) {
+        this.config = config;
         this.ip = ip;
         this.encoding = encoding;
     }
 
     @Override
     public void run() {
-        String newContent = HttpUtil.getStringFromUrl(url, encoding, ip);
-        if (!HttpUtil.ERROR.equals(newContent)) {
-            if (!sameCache(filePath, newContent)) {
-                try {
-                    FileUtil.writeToFile(filePath, newContent, encoding);
-                    GeneraterManager.setCache(filePath,newContent);
-                    logger.info(new Date().toGMTString()+" create new file success,filePath is "+filePath);
-                } catch (IOException e) {
-                    logger.error("writeToFile error,filePath is " + filePath + ";encoding is " + encoding, e);
+        String newContent = HttpUtil.getStringFromUrl(config.getUrl(), encoding, ip);
+        if (!HttpUtil.ERROR.equals(newContent) && newContent != null) {
+            if (config.getKey() != null && newContent.contains(config.getKey())) {
+                if (!sameCache(config.getPath(), newContent)) {
+                    try {
+                        FileUtil.writeToFile(config.getPath(), newContent, encoding);
+                        GeneraterManager.setCache(config.getPath(), newContent);
+                        logger.info(new Date().toGMTString() + " create new file success,filePath is " + config.getPath());
+                    } catch (IOException e) {
+                        logger.error("writeToFile error,filePath is " + config.getPath() + ";encoding is " + encoding, e);
+                    }
                 }
             }
         }
@@ -85,4 +77,27 @@ public class GeneraterWorker implements Runnable {
 
     }
 
+    public UrlFileConfig getConfig() {
+        return config;
+    }
+
+    public void setConfig(UrlFileConfig config) {
+        this.config = config;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public void setIp(String ip) {
+        this.ip = ip;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
+    }
 }

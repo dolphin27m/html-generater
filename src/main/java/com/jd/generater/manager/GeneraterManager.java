@@ -1,12 +1,15 @@
 package com.jd.generater.manager;
 
+import com.jd.generater.domain.UrlFileConfig;
 import com.jd.generater.util.FileUtil;
 import com.jd.generater.worker.GeneraterWorker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 
@@ -30,7 +33,7 @@ public class GeneraterManager {
     /**
      * URL 文件路径映射集合
      */
-    private Map<String, String> urlFileMap;
+    private List<UrlFileConfig> urlFileList;
     /**
      * 指定ip
      */
@@ -52,29 +55,29 @@ public class GeneraterManager {
      */
     private Long period;
     /**
-     * 默认周期执行时间
+     * 默认周期执行时间 ,单位秒
      */
     private final static Long defaultPeriod = 120L;
 
-    public GeneraterManager(Map<String, String> urlFileMap, String ip, String encoding) {
-        this(urlFileMap, ip, encoding, null, null);
+    public GeneraterManager(List<UrlFileConfig> urlFileList, String ip, String encoding) {
+        this(urlFileList, ip, encoding, null, null);
     }
 
-    public GeneraterManager(Map<String, String> urlFileMap, String ip, String encoding, Long delay) {
-        this(urlFileMap, ip, encoding, delay, null);
+    public GeneraterManager(List<UrlFileConfig> urlFileList, String ip, String encoding, Long delay) {
+        this(urlFileList, ip, encoding, delay, null);
     }
 
-    public GeneraterManager(Map<String, String> urlFileMap, String ip, Long period, String encoding) {
-        this(urlFileMap, ip, encoding, null, period);
+    public GeneraterManager(List<UrlFileConfig> urlFileList, String ip, Long period, String encoding) {
+        this(urlFileList, ip, encoding, null, period);
     }
 
-    public GeneraterManager(Map<String, String> urlFileMap, String ip, String encoding, Long delay, Long period) {
-        this.urlFileMap = urlFileMap;
+    public GeneraterManager(List<UrlFileConfig> urlFileList, String ip, String encoding, Long delay, Long period) {
+        this.urlFileList = urlFileList;
         this.ip = ip;
         this.encoding = encoding;
         this.delay = delay == null ? defaultDelay : delay;
         this.period = period == null ? defaultPeriod : period;
-        executorWorker = Executors.newFixedThreadPool(urlFileMap.size());
+        executorWorker = Executors.newFixedThreadPool(urlFileList.size());
         initLocalFileCache();
         initTask();
     }
@@ -95,11 +98,11 @@ public class GeneraterManager {
      * 进行url的静态化具体操作
      */
     private void doWork() {
-        if (urlFileMap == null || urlFileMap.isEmpty()) {
+        if (urlFileList == null || urlFileList.isEmpty()) {
             return;
         }
-        for (String key : urlFileMap.keySet()) {
-            GeneraterWorker worker = new GeneraterWorker(key, urlFileMap.get(key), ip, encoding);
+        for (UrlFileConfig config : urlFileList) {
+            GeneraterWorker worker = new GeneraterWorker(config, ip, encoding);
             executorWorker.execute(worker);
         }
     }
@@ -108,11 +111,11 @@ public class GeneraterManager {
      * 初始化文件缓存
      */
     private void initLocalFileCache() {
-        if (urlFileMap == null || urlFileMap.isEmpty()) {
+        if (urlFileList == null || urlFileList.isEmpty()) {
             return;
         }
-        for (String key : urlFileMap.keySet()) {
-            String filePath = urlFileMap.get(key);
+        for (UrlFileConfig config : urlFileList) {
+            String filePath = config.getPath();
             try {
                 String content = FileUtil.readFromFile(filePath, encoding);
                 if (content != null) {
@@ -154,12 +157,15 @@ public class GeneraterManager {
         }
         return null;
     }
-    public static void main(String[] args){
-        Map<String,String> map = new HashMap<String, String>();
-        map.put("http://try.jd.com","D:/export/Data/try.jd.local/try/index.html");
+
+    public static void main(String[] args) {
+        String key = "<title>京东试用中心-专业的综合网上免费试用平台</title>";
+        UrlFileConfig config = new UrlFileConfig("http://try.home.jd.com", "D:/export/Data/try.jd.local/try/index.html", key);
         String ip = "172.17.26.36";
         String encoding = "UTF-8";
-        GeneraterManager manager = new GeneraterManager(map,ip,encoding);
+        ArrayList<UrlFileConfig> list = new ArrayList<UrlFileConfig>();
+        list.add(config);
+        GeneraterManager manager = new GeneraterManager(list, ip, encoding);
         System.out.println("success");
     }
 }
