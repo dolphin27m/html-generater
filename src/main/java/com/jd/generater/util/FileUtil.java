@@ -63,10 +63,4 @@ public class FileUtil {
         return sb.toString();
     }
 
-    public static void main(String[] args) throws IOException {
-         String filePath = "D:/export/Data/try.jd.local/try/index.html";
-       //writeToFile(filePath,"111111","utf-8");
-        System.out.println("content="+readFromFile(filePath,"utf-8"));
-
-    }
 }

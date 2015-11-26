@@ -70,7 +70,5 @@ public class HttpUtil {
         return ERROR;
     }
 
-    public static void main(String[] args) {
-       System.out.println( HttpUtil.getStringFromUrl("http://try.home.jd.com", "UTF-8", "172.17.26.36"));
-    }
+
 }

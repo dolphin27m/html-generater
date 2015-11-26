@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -158,14 +156,4 @@ public class GeneraterManager {
         return null;
     }
 
-    public static void main(String[] args) {
-        String key = "<title>京东试用中心-专业的综合网上免费试用平台</title>";
-        UrlFileConfig config = new UrlFileConfig("http://try.home.jd.com", "D:/export/Data/try.jd.local/try/index.html", key);
-        String ip = "172.17.26.36";
-        String encoding = "UTF-8";
-        ArrayList<UrlFileConfig> list = new ArrayList<UrlFileConfig>();
-        list.add(config);
-        GeneraterManager manager = new GeneraterManager(list, ip, encoding);
-        System.out.println("success");
-    }
 }
